@@ -127,8 +127,7 @@ You can find out more about the node shell [here](https://docs.corda.net/shell.h
    
            Not validated user   
 
-  
-### Trying to create same user with same Name
+### Trying to create same user with same Name on same party
 
     Tue Jan 07 15:25:03 IST 2020>>> flow start CreateAuthFlow accounttName: Prateek, toparty: PartyA, Authsecret: mdx2ivd87jKwDbtnkz6Lq0eAZf2lolUC
     
@@ -138,5 +137,11 @@ You can find out more about the node shell [here](https://docs.corda.net/shell.h
     	☠   java.lang.IllegalArgumentException: There is already an account registered with the specified name Prateek.
   
   
+### Check accounts on node
 
+    Wed Jan 08 17:46:45 IST 2020>>> flow start AccountsonNode                                                                                    
+    
+     ✅   Starting
+    ➡️   Done
+    Flow completed with result: [Prateek, Yudiz]
   
