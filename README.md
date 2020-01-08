@@ -118,6 +118,15 @@ You can find out more about the node shell [here](https://docs.corda.net/shell.h
     ➡️   Starting
           Done
          You are validated user
+
+### If user put some different Authtoken 
+
+         Tue Jan 07 15:22:48 IST 2020>>> flow start Validation Username: Prateek, AuthSecret: WNv3KutignVD6TdwSLbLDOfOLSztuTYU
+     
+         ➡️   Starting
+   
+           Not validated user   
+
   
 ### Trying to create same user with same Name
 
