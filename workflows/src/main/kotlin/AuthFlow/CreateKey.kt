@@ -7,7 +7,7 @@ import net.corda.core.flows.InitiatingFlow
 import net.corda.core.flows.StartableByRPC
 import net.corda.core.utilities.ProgressTracker
 
-
+//Create AES Key
 @InitiatingFlow
 @StartableByRPC
 class CreateKey : FlowLogic<String>() {
@@ -22,7 +22,7 @@ class CreateKey : FlowLogic<String>() {
 }
 
 
-
+// 32 bytes Random String
 @StubOutForDJVM
 private fun generateRandomPassword(): String {
     val chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"

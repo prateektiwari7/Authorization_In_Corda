@@ -23,9 +23,11 @@ import java.util.*
 import javax.crypto.*
 import javax.crypto.spec.SecretKeySpec
 
+
+// Create Unique user account on node and encryption with Key generated.
 @InitiatingFlow
 @StartableByRPC
-class CreateAuthFlow(val  accounttName: String, val toparty: Party, val Authsecret: String) : FlowLogic<SignedTransaction>() {
+class CreateAuthFlow(val  accountName: String, val toparty: Party, val Authsecret: String) : FlowLogic<SignedTransaction>() {
     override val progressTracker = ProgressTracker()
 
     @Suspendable
@@ -35,13 +37,13 @@ class CreateAuthFlow(val  accounttName: String, val toparty: Party, val Authsecr
 
 
         try {
-            val newAccount = accountService.createAccount(name = accounttName).toCompletableFuture().getOrThrow()
+            val newAccount = accountService.createAccount(name = accountName).toCompletableFuture().getOrThrow()
             val acct = newAccount.state.data
             var key =  subFlow(RequestKeyForAccount(toparty,newAccount.state.data.identifier.id))
 
             var hash = Encryption(Authsecret,Authsecret)
 
-            var State =  AuthState(accounttName,hash,toparty,acct.linearId)
+            var State =  AuthState(accountName,hash,toparty,acct.linearId)
 
             var Command = Command(AuthContract.Commands.Action(),State.participants.map { it.owningKey })
 

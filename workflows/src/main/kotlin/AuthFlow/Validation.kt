@@ -17,6 +17,7 @@ import java.security.Security
 import javax.crypto.*
 import javax.crypto.spec.SecretKeySpec
 
+// Validation user account on the key basis
 @InitiatingFlow
 @StartableByRPC
 class Validation(val Username: String, val AuthSecret: String) : FlowLogic<Unit>() {
