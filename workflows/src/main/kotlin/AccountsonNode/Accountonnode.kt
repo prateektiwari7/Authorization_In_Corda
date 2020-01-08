@@ -30,10 +30,3 @@ class AccountsonNode : FlowLogic<List<String>>() {
     }
 }
 
-@InitiatedBy(AccountsonNode::class)
-class AccountsonNode_Responder(val counterpartySession: FlowSession) : FlowLogic<Unit>() {
-    @Suspendable
-    override fun call() {
-        // Responder flow logic goes here.
-    }
-}
