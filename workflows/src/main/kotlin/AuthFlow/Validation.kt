@@ -42,8 +42,6 @@ class Validation(val Username: String, val AuthSecret: String) : FlowLogic<Unit>
             throw Exception("You are not validated user")
         }
 
-
-
     }
 }
 
