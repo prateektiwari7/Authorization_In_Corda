@@ -35,7 +35,7 @@ class Validation(val Username: String, val AuthSecret: String) : FlowLogic<Unit>
         if(decrypteddata.equals(AuthSecret))
 
         {
-            throw Exception("You are validated user")
+            throw Exception("You are validated user. Call your flows here now. Use subflow directly after this code")
         }
 
         else {
