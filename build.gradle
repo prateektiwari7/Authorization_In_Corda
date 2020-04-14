@@ -1,13 +1,12 @@
 buildscript {
+
     Properties constants = new Properties()
     file("$projectDir/./constants.properties").withInputStream { constants.load(it) }
-
     ext {
-
-        //corda_gradle_plugins_version = '4.0.45'
-
         corda_release_group = constants.getProperty("cordaReleaseGroup")
+        corda_core_release_group =  constants.getProperty("cordaCoreReleaseGroup")
         corda_release_version = constants.getProperty("cordaVersion")
+        corda_core_release_version = constants.getProperty("cordaCoreVersion")
         corda_gradle_plugins_version = constants.getProperty("gradlePluginsVersion")
         kotlin_version = constants.getProperty("kotlinVersion")
         junit_version = constants.getProperty("junitVersion")
@@ -18,20 +17,12 @@ buildscript {
         //springboot
         spring_boot_version = '2.0.2.RELEASE'
         spring_boot_gradle_plugin_version = '2.0.2.RELEASE'
-
-
-
-        //External dependices
-        accounts_release_group = 'com.r3.corda.lib.accounts'
-        accounts_release_version = '1.0-RC04'
-
         confidential_id_release_group = "com.r3.corda.lib.ci"
-        confidential_id_release_version = "1.0-RC03"
-
-
-
-
-
+        confidential_id_release_version = "1.0"
+        accounts_release_group = 'com.r3.corda.lib.accounts'
+        accounts_release_version = '1.0'
+        log4j_version = '2.9.1'
+        okhttp_version = '3.5.0'
 
 
     }
@@ -40,17 +31,10 @@ buildscript {
         mavenLocal()
         mavenCentral()
         jcenter()
-        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-releases' }
-
-
-
-        //external repo
-
-        maven { url 'http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib-dev' }
-        maven { url 'http://ci-artifactory.corda.r3cev.com/artifactory/corda-lib' }
         maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda' }
-        // Corda dependencies for the patched Quasar version
-        maven { url "https://software.r3.com/artifactory/corda-dependencies" }
+
+
+
     }
 
     dependencies {
@@ -64,25 +48,18 @@ buildscript {
 }
 
 allprojects {
-    apply from: "${rootProject.projectDir}/repositories.gradle"
     apply plugin: 'kotlin'
 
     repositories {
         mavenLocal()
         jcenter()
         mavenCentral()
-        maven { url 'https://software.r3.com/artifactory/corda' }
-        maven { url 'https://jitpack.io' }
-
-
-        //External Repo
         maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda' }
         // Can be removed post-release - used to get nightly snapshot build.
         maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-lib' }
         maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda-lib-dev' }
         maven { url 'https://jitpack.io' }
         maven { url "https://repo.gradle.org/gradle/libs-releases-local" }
-
     }
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
@@ -95,15 +72,18 @@ allprojects {
     }
 
     jar {
-        // This makes the JAR's SHA-256 hash repeatable.
-        preserveFileTimestamps = false
-        reproducibleFileOrder = true
+        // Don't include log config files.
+        exclude "**/log4j2*.xml"
+        // We need this because log4j2.xml is pulled in from multiple dependency JARs.
+        // JAR signing will fail if there are multiple files with the same name.
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
 }
 
 apply plugin: 'net.corda.plugins.cordapp'
 apply plugin: 'net.corda.plugins.cordformation'
 apply plugin: 'net.corda.plugins.quasar-utils'
+
 
 sourceSets {
     main {
@@ -114,32 +94,33 @@ sourceSets {
 }
 
 dependencies {
+    // Kotlin.
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+
     // Corda dependencies.
     cordaCompile "$corda_release_group:corda-core:$corda_release_version"
-    cordaRuntime "$corda_release_group:corda-node-api:$corda_release_version"
+    //  cordaCompile "$tokens_release_group:tokens-contracts:$tokens_release_version"
+    cordaCompile "$corda_release_group:corda-rpc:$corda_release_version"
+
     cordaRuntime "$corda_release_group:corda:$corda_release_version"
+    cordaRuntime "net.corda:corda-node-api:$corda_release_version"
 
     // CorDapp dependencies.
     cordapp project(":workflows")
     cordapp project(":contracts")
 
-    cordaCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
-    cordaCompile "org.apache.logging.log4j:log4j-web:${log4j_version}"
-    cordaCompile "org.slf4j:jul-to-slf4j:$slf4j_version"
+    // For logging.
+    testCompile "org.apache.logging.log4j:log4j-slf4j-impl:${log4j_version}"
 
-    //External depo
+    testCompile "org.apache.logging.log4j:log4j-web:${log4j_version}"
+
     cordapp "$confidential_id_release_group:ci-workflows:$confidential_id_release_version"
     cordapp "$accounts_release_group:accounts-contracts:$accounts_release_version"
     cordapp "$accounts_release_group:accounts-workflows:$accounts_release_version"
-}
 
-cordapp {
-    info {
-        name "CorDapp Template"
-        vendor "Corda Open Source"
-        targetPlatformVersion corda_platform_version
-        minimumPlatformVersion corda_platform_version
-    }
+    implementation 'com.google.code.gson:gson:2.8.6'
+
+
 }
 
 task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
@@ -147,26 +128,22 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
         projectCordapp {
             deploy = false
         }
+        cordapp "$confidential_id_release_group:ci-workflows:$confidential_id_release_version"
+        cordapp "$accounts_release_group:accounts-contracts:$accounts_release_version"
+        cordapp "$accounts_release_group:accounts-workflows:$accounts_release_version"
 
-
-
-
-        cordapp("$confidential_id_release_group:ci-workflows:$confidential_id_release_version")
-        cordapp("$accounts_release_group:accounts-contracts:$accounts_release_version")
-        cordapp("$accounts_release_group:accounts-workflows:$accounts_release_version")
-
-
-        cordapp project(':contracts')
-        cordapp project(':workflows')
+        cordapp project(":contracts")
+        cordapp project(":workflows")
     }
     node {
         name "O=Notary,L=London,C=GB"
-        notary = [validating : false]
+        notary = [validating : true]
         p2pPort 10002
         rpcSettings {
             address("localhost:10003")
             adminAddress("localhost:10043")
         }
+        cordapps = []
     }
     node {
         name "O=PartyA,L=London,C=GB"
@@ -188,11 +165,3 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
     }
 
 }
-
-task installQuasar(type: Copy) {
-    destinationDir rootProject.file("lib")
-    from(configurations.quasar) {
-        rename 'quasar-core(.*).jar', 'quasar.jar'
-    }
-}
-
